@@ -1,0 +1,30 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: rgb(235, 228, 228);
+}
+
+#wrapper-calc {
+    background-color: rgb(76, 76, 76);
+    margin: 35px auto;
+    width: 375px;
+    height: 525px;
+    border: 15px rgb(76, 76, 76) solid;
+    border-radius: 13px;
+
+    display: flex;
+    align-items: stretch;
+}
+
+#calc {
+    background-color: rgb(39, 39, 39);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+#screen {
+    background-color: rgb(192, 203, 183);
+    color: rgb(39, 39, 39);
+}
