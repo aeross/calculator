@@ -2,9 +2,19 @@
 const MAX_DIGITS = 12
 const ERROR = "Err"
 let n1 = "";
+
+// the operand is an object. Only one of `add`, `subtract`,
+// `multiply`, or `divide` can be true.
+let operandObj = {
+    add: false,
+    subtract: false,
+    multiply: false,
+    divide: false,
+};
 let n2 = "";
 let ans = "";
 let screenDisp = "";
+
 /* Variable to determine whether to store the next value at n1 or n2. 
 If 0, store the next value at n1. If 1, store the next value at n2.
 The `operand` buttons switches the variable's true or false value.
@@ -19,9 +29,10 @@ function checkErr(n) {
     return false;
 }
 
-function updateScreenDisp(newDisp) {
+function updateScreenDisp(additionalDisp) {
+    screenDisp += additionalDisp;
     const screen = document.querySelector("#screen-content");
-    screen.innerHTML = newDisp;
+    screen.innerHTML = screenDisp;
 }
 
 
@@ -88,41 +99,56 @@ class Action {
 
         buttons.forEach((button) => {
             button.addEventListener("click", function() {
-                // each button's class name, which uniquely identifies what number is pressed
-                var className = button.classList[1];  
-                var newVal;
-                switch (className) {
-                    case "zero": newVal = 0; break;
-                    case "one": newVal = 1; break;
-                    case "two": newVal = 2; break;
-                    case "three": newVal = 3; break;
-                    case "four": newVal = 4; break;
-                    case "five": newVal = 5; break;
-                    case "six": newVal = 6; break;
-                    case "seven": newVal = 7; break;
-                    case "eight": newVal = 8; break;
-                    case "nine": newVal = 9; break;
-                }
+                // each button's number value (0, 1, 2, ...)
+                var numberVal = button.innerHTML;
 
                 // insert button's value to n1 or n2, if digit limit hasn't been reached
-                if (inputAtFirstNum && (!checkErr(n1 + newVal))) {
-                    n1 += newVal;
-                    updateScreenDisp(n1);
-                } else if (!inputAtFirstNum && (!checkErr(n2 + newVal))) {
-                    n2 += newVal;
-                    updateScreenDisp(n2);
+                if (inputAtFirstNum && (!checkErr(n1 + numberVal))) {
+                    n1 += numberVal;
+                    updateScreenDisp(numberVal);
+                } else if (!inputAtFirstNum && (!checkErr(n2 + numberVal))) {
+                    n2 += numberVal;
+                    updateScreenDisp(numberVal);
                 }
             })
         });
     }
 
+    operandOnClick() {
+        const operands = document.querySelectorAll(".operand");
 
+        operands.forEach((operand) => {
+            operand.addEventListener("click", function() {
+                var className = operand.classList[1];
+
+                // EDGE CASE: if n2 is not empty, automatically compute n1 `prevOperand` n2,
+                // assign that value to n1, make n2 empty, then assign the new operand
+                if (n2.length != 0) {
+                    // TODO: ...
+                }
+                
+                // OTHERWISE: ensure every value in `operandObj` is false
+                for (let o in operandObj) {
+                    if (operandObj[o] == true) {
+                        return;
+                    }
+                }
+
+                operandObj[className] = true;
+                updateScreenDisp(operand.innerHTML);
+                
+                // toggle `inputAtFirstNum` to ensure the next button clicks
+                // go to n2 instead of n1
+                inputAtFirstNum = !inputAtFirstNum;
+            })
+        });
+    }
 }
 
 
 let a = new Action();
 a.numberOnClick();
-
+a.operandOnClick();
 
 /*
 let calculator = new Maths();
