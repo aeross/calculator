@@ -17,13 +17,13 @@ let ans = "";
 let screenDisp = "";
 
 /* Variable to determine whether to store the next value at n1 or n2. 
-If 0, store the next value at n1. If 1, store the next value at n2.
+If true, store the next value at n1. If false, store the next value at n2.
 The `operand` buttons switches the variable's true or false value.
 The `=` button resets it back to true. */
 inputAtFirstNum = true;
 
 
-function checkErr(n) {
+function checkDigits(n) {
     if ((""+n).length > MAX_DIGITS) {
         return true;
     }
@@ -61,29 +61,39 @@ function resetToDefault() {
 
 
 class Maths {
+    /* If the total number of digits is more than 12 but the number of digits
+    before the decimal point is less than 12, we can round off the digits
+    after the decimal point so that the total number of digits is reduced to 12. */
+    roundDecimals(num) {
+        if (checkDigits(num)) {
+            // `beforePoint` is the number of digits before decimal point, e.g.,
+            // 123.45 will have `beforePoint` == 3
+            let beforePoint = num.toString().split('.')[0];
+            if (beforePoint.length == MAX_DIGITS) {
+                return beforePoint;
+            }
+            if (beforePoint.length > MAX_DIGITS) {
+                return ERROR;
+            }
+            return num.toFixed(MAX_DIGITS - beforePoint.length - 1);
+        }
+        return num.toString();
+    }
+
     /* Operand methods. All methods return strings. */
     add(n1, n2) {
         let val = n1 + n2;
-        if (checkErr(val)) {
-            return ERROR;
-        }
-        return val.toString();
+        return this.roundDecimals(val);
     }
 
     subtract(n1, n2) {
         let val = n1 - n2;
-        if (checkErr(val)) {
-            return ERROR;
-        }
-        return val.toString();
+        return this.roundDecimals(val);
     }
 
     multiply(n1, n2) {
         let val = n1 * n2;
-        if (checkErr(val)) {
-            return ERROR;
-        }
-        return val.toString();
+        return this.roundDecimals(val);
     }
 
     divide(n1, n2) {
@@ -93,23 +103,7 @@ class Maths {
         }
 
         let val = n1 / n2;
-        if (checkErr(val)) {
-            // round the decimals off so that the total num of digits is 12
-            // `beforePoint` is the number of digits before decimal point, e.g.,
-            // 123.45 will have `beforePoint` == 3
-            let beforePoint = val.toString().split('.')[0];
-            if (beforePoint.length == MAX_DIGITS) {
-                return beforePoint;
-            }
-            if (beforePoint.length > MAX_DIGITS) {
-                return ERROR;
-            }
-            val = val.toFixed(MAX_DIGITS - beforePoint.length - 1);
-        } else {
-            val = val.toString();
-        }
-
-        return val;
+        return this.roundDecimals(val);
     }
 }
 
@@ -129,11 +123,11 @@ class Action {
 
                 // insert button's value to n1 or n2, if digit limit 
                 // hasn't been reached and n1 or n2's screen display is not equal to Ans
-                if (inputAtFirstNum && (!checkErr(n1 + numberVal)) && 
+                if (inputAtFirstNum && (!checkDigits(n1 + numberVal)) && 
                   screenDisp.substring(0, ANSWER.length) !== ANSWER) {
                     n1 += numberVal;
                     updateScreenDisp(numberVal);
-                } else if (!inputAtFirstNum && (!checkErr(n2 + numberVal)) && 
+                } else if (!inputAtFirstNum && (!checkDigits(n2 + numberVal)) && 
                   screenDisp.substring(screenDisp.length - ANSWER.length, screenDisp.length) !== ANSWER) {
                     n2 += numberVal;
                     updateScreenDisp(numberVal);
