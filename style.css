@@ -25,6 +25,7 @@ body {
 
     display: flex;
     flex-direction: column;
+    max-width: 350px;
 }
 
 #screen {
@@ -37,11 +38,20 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    
+    text-align: right;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-#screen p {
+#screen div {
+    float: right;
+}
+
+
+#screen #screen-content {
     margin: 0;
-    padding: 6px;
+    padding: 8px;
     font-size: 49px;
 }
 
