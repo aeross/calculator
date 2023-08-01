@@ -1,6 +1,7 @@
 // max 12 digits
-const MAX_DIGITS = 12
-const ERROR = "Err"
+const MAX_DIGITS = 12;
+const ERROR = "Err";
+const ANSWER = "Ans";
 let n1 = "";
 
 // the operand is an object. Only one of `add`, `subtract`,
@@ -19,7 +20,7 @@ let screenDisp = "";
 If 0, store the next value at n1. If 1, store the next value at n2.
 The `operand` buttons switches the variable's true or false value.
 The `=` button resets it back to true. */
-this.inputAtFirstNum = true;
+inputAtFirstNum = true;
 
 
 function checkErr(n) {
@@ -30,9 +31,32 @@ function checkErr(n) {
 }
 
 function updateScreenDisp(additionalDisp) {
-    screenDisp += additionalDisp;
     const screen = document.querySelector("#screen-content");
+    if (additionalDisp === ERROR) {
+        screenDisp = ERROR;
+        screen.innerHTML = screenDisp;
+        return;
+    }
+    if (screenDisp === ERROR) {
+        screenDisp = "";
+    }
+    screenDisp += additionalDisp;
     screen.innerHTML = screenDisp;
+}
+
+function resetToDefault() {
+    // reset everything to default
+    n1 = "";
+    operandObj = {
+        add: false,
+        subtract: false,
+        multiply: false,
+        divide: false,
+    };
+    n2 = "";
+    screenDisp = "";
+    inputAtFirstNum = true;
+    updateScreenDisp("");
 }
 
 
@@ -92,6 +116,7 @@ class Maths {
 
 class Action {
     /* methods */
+    /* The number buttons. */
     numberOnClick() {
         /* NOTE: addEventListener inside function can only access *global* 
         variables. Using this.var inside this class does not work unfortunately... */
@@ -102,11 +127,14 @@ class Action {
                 // each button's number value (0, 1, 2, ...)
                 var numberVal = button.innerHTML;
 
-                // insert button's value to n1 or n2, if digit limit hasn't been reached
-                if (inputAtFirstNum && (!checkErr(n1 + numberVal))) {
+                // insert button's value to n1 or n2, if digit limit 
+                // hasn't been reached and n1 or n2's screen display is not equal to Ans
+                if (inputAtFirstNum && (!checkErr(n1 + numberVal)) && 
+                  screenDisp.substring(0, ANSWER.length) !== ANSWER) {
                     n1 += numberVal;
                     updateScreenDisp(numberVal);
-                } else if (!inputAtFirstNum && (!checkErr(n2 + numberVal))) {
+                } else if (!inputAtFirstNum && (!checkErr(n2 + numberVal)) && 
+                  screenDisp.substring(screenDisp.length - ANSWER.length, screenDisp.length) !== ANSWER) {
                     n2 += numberVal;
                     updateScreenDisp(numberVal);
                 }
@@ -114,24 +142,33 @@ class Action {
         });
     }
 
+
+    /* The operand buttons. */
     operandOnClick() {
         const operands = document.querySelectorAll(".operand");
 
         operands.forEach((operand) => {
             operand.addEventListener("click", function() {
                 var className = operand.classList[1];
-
-                // EDGE CASE: if n2 is not empty, automatically compute n1 `prevOperand` n2,
-                // assign that value to n1, make n2 empty, then assign the new operand
-                if (n2.length != 0) {
-                    // TODO: ...
-                }
                 
-                // OTHERWISE: ensure every value in `operandObj` is false
+                // ensure every value in `operandObj` is false
+                // to prevent multiple operands. For example, 5 + 7 - 3
                 for (let o in operandObj) {
                     if (operandObj[o] == true) {
                         return;
                     }
+                }
+
+                // the only exception is `-`, because it could also denote negative numbers.
+                if (n1 === "") {
+                    if (operand.innerHTML === "-") {
+                        n1 += "-";
+                        updateScreenDisp("-");
+                    }
+                    return;
+                }
+                if (n1 === "-") {
+                    return;
                 }
 
                 operandObj[className] = true;
@@ -143,13 +180,116 @@ class Action {
             })
         });
     }
+
+    /* AC and DEL buttons. */
+    clearOnClick() {
+        const AC = document.querySelector(".ac");
+        const DEL = document.querySelector(".del");
+
+        AC.addEventListener("click", resetToDefault);
+
+        DEL.addEventListener("click", function() {
+            const toBeDeleted = screenDisp.charAt(screenDisp.length - 1);
+
+            // if `screenDisp` is `ERROR`
+            if (screenDisp === ERROR) {
+                resetToDefault();
+            }
+
+            // if `toBeDeleted` is an operand
+            const operands = document.querySelectorAll(".operand");
+            var operandList = [];
+            operands.forEach((operand) => operandList.push(operand.innerHTML));
+            if (operandList.includes(toBeDeleted)) {
+                inputAtFirstNum = true;
+                operandObj = {
+                    add: false,
+                    subtract: false,
+                    multiply: false,
+                    divide: false,
+                };
+            }
+
+            // if `toBeDeleted` is a number
+            else {
+                if (inputAtFirstNum) {
+                    // remove the last digit of n1
+                    n1 = n1.substring(0, n1.length - 1);
+                } else {
+                    // remove the last digit of n2
+                    n2 = n2.substring(0, n2.length - 1);
+                }
+            }
+
+            screenDisp = screenDisp.substring(0, screenDisp.length - 1);
+            updateScreenDisp("");
+        });
+    }
+
+    /* = and Ans buttons */
+    answerOnClick() {
+        const EQ = document.querySelector(".eq");
+        const ANS = document.querySelector(".ans");
+
+        EQ.addEventListener("click", function() {
+            // compute what's in `screenContent`.
+            // ensure that n1 and n2 isn't empty as well.
+            if (n2 === "" || n1 === "") {
+                return;
+            }
+
+            // find what type of operand we're dealing with
+            const maths = new Maths();
+            let output;
+            let operand;
+            for (let o in operandObj) {
+                if (operandObj[o] == true) {
+                    operand = o;
+                }
+            }
+            // then calculate
+            switch (operand) {
+                case "add": 
+                    output = maths.add(Number(n1), Number(n2)); break;
+                case "subtract":
+                    output = maths.subtract(Number(n1), Number(n2)); break;
+                case "multiply":
+                    output = maths.multiply(Number(n1), Number(n2)); break;
+                case "divide":
+                    output = maths.divide(Number(n1), Number(n2)); break;
+            }
+
+            // handles how `n1`, `n2`, and everything else changes after pressing =
+            resetToDefault();
+            if (output === ERROR) {
+                updateScreenDisp(ERROR);
+            } else {
+                updateScreenDisp(output);
+                ans = output;
+                n1 = output;
+                n2 = "";
+                inputAtFirstNum = true;
+            }
+        });
+
+        ANS.addEventListener("click", function() {
+            if (n1 === "") {
+                n1 = ans;
+                updateScreenDisp(ANSWER);
+            } else if (!inputAtFirstNum && n2 === "") {
+                n2 = ans;
+                updateScreenDisp(ANSWER);
+            }
+        });
+    }
 }
 
 
 let a = new Action();
 a.numberOnClick();
 a.operandOnClick();
-
+a.clearOnClick();
+a.answerOnClick();
 /*
 let calculator = new Maths();
 console.log(calculator.add(2, 5));
